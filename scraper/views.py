@@ -2,10 +2,12 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from asgiref.sync import sync_to_async
 import json
 from .utils import fetch_sitemap, fetch_sitemap_with_custom_location, get_page_content_size
 from .models import SitemapURL
 
+create_sitemap_url = sync_to_async(SitemapURL.objects.create)
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -21,7 +23,7 @@ async def fetch_sitemap_urls(request):
             urls = await fetch_sitemap(domain)
 
         for url_data in urls:
-            SitemapURL.objects.create(
+            await create_sitemap_url(
                 url=url_data['url'],
                 size=url_data['size'],
                 selected=url_data['selected'],
