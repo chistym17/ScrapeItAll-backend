@@ -71,7 +71,7 @@ async def fetch_content(url: str, browser) -> tuple[str, int]:
         page = await context.new_page()
         await page.wait_for_timeout(1000)
         
-        response = await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        response = await page.goto(url, wait_until="domcontentloaded", timeout=60000)
         
         if response and response.ok:
             body = await response.body()
