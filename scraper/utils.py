@@ -93,7 +93,9 @@ async def fetch_content(url: str, browser) -> tuple[str, int]:
                         
                     return document.documentElement.outerHTML;
                 }''')
-            
+
+            content = clean_html_content(content)
+
             return content, size
         else:
             print(f"Failed to fetch {url}: HTTP {response.status if response else 'No response'}")
@@ -348,6 +350,37 @@ async def get_page_content_size(url: str) -> Optional[int]:
 
         finally:
             await browser.close()
+
+def clean_html_content(html_content: str) -> str:
+    """Clean HTML content and extract readable text.
+    
+    Args:
+        html_content: Raw HTML string
+    Returns:
+        Cleaned text content with preserved line breaks
+    """
+    try:
+        html_content = XML_STYLESHEET_PATTERN.sub('', html_content)
+        html_content = DOCTYPE_PATTERN.sub('', html_content)
+        html_content = HTML_BODY_PATTERN.sub('', html_content)
+        html_content = HTML_END_PATTERN.sub('', html_content)
+        
+        soup = BeautifulSoup(html_content, 'html.parser')
+        
+        for element in soup(['script', 'style', 'meta', 'link', 'noscript']):
+            element.decompose()
+            
+        text = soup.get_text(separator=' ', strip=True)
+        
+        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r'\n\s*\n', '\n\n', text)
+        text = text.strip()
+        
+        return text
+        
+    except Exception as e:
+        print(f"Error cleaning HTML content: {e}")
+        return ""
 
 
 
